@@ -1,0 +1,50 @@
+CREATED:
+2023-04-25 at time 12:30:38
+
+WITH GIT REVISION:
+2b1f84a304839211bdf2f3a3f01bc4f23ecf45fb
+
+LIBRARY:
+TF
+
+NET NAME:
+Dense-16H1-16H2
+
+NET FULL NAME:
+Dense-7IN-16H1-16H2-1OUT-0
+
+INPUTS:
+angleD, angle_cos, angle_sin, position, positionD, target_equilibrium, target_position
+
+OUTPUTS:
+Q
+
+TYPE:
+Dense
+
+NORMALIZATION:
+./SI_Toolkit_ASF/Experiments/CPS-17-02-2023-UpDown-Imitation/Models/Dense-7IN-16H1-16H2-1OUT-0/NI_2023-02-17_16-30-39.csv
+
+PARENT NET:
+Network trained from scratch
+
+WASH OUT LENGTH:
+0
+
+CONSTRUCT NETWORK:
+with cells
+
+TRAINING_FILES:
+./SI_Toolkit_ASF/Experiments/CPS-17-02-2023-UpDown-Imitation//Recordings/Train/
+
+VALIDATION_FILES:
+./SI_Toolkit_ASF/Experiments/CPS-17-02-2023-UpDown-Imitation//Recordings/Validate/
+
+TEST_FILES:
+./SI_Toolkit_ASF/Experiments/CPS-17-02-2023-UpDown-Imitation//Recordings/Test/
+
+TIMESTEP MEAN:
+0.0
+
+TIMESTEP STD:
+0.0

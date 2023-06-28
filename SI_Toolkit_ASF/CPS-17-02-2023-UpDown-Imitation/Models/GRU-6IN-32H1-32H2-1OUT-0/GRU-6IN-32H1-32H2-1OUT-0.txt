@@ -1,0 +1,50 @@
+CREATED:
+2023-06-28 at time 11:52:46
+
+WITH GIT REVISION:
+3c05fb09d24d3937c3720529dd07aa76b09c69ee
+
+LIBRARY:
+TF
+
+NET NAME:
+GRU-32H1-32H2
+
+NET FULL NAME:
+GRU-6IN-32H1-32H2-1OUT-0
+
+INPUTS:
+angleD, angle_cos, angle_sin, position, positionD, target_position
+
+OUTPUTS:
+Q
+
+TYPE:
+GRU
+
+NORMALIZATION:
+./SI_Toolkit_ASF/CPS-17-02-2023-UpDown-Imitation/Models/GRU-6IN-32H1-32H2-1OUT-0/NI_2023-02-17_16-30-39.csv
+
+PARENT NET:
+Network trained from scratch
+
+WASH OUT LENGTH:
+10
+
+CONSTRUCT NETWORK:
+with cells
+
+TRAINING_FILES:
+./SI_Toolkit_ASF/CPS-17-02-2023-UpDown-Imitation//Recordings/Train/
+
+VALIDATION_FILES:
+./SI_Toolkit_ASF/CPS-17-02-2023-UpDown-Imitation//Recordings/Validate/
+
+TEST_FILES:
+./SI_Toolkit_ASF/CPS-17-02-2023-UpDown-Imitation//Recordings/Test/
+
+TIMESTEP MEAN:
+0.0
+
+TIMESTEP STD:
+0.0
