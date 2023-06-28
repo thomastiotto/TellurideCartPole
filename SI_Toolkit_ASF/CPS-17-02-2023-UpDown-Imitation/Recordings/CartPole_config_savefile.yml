@@ -1,0 +1,26 @@
+cartpole:
+  J_fric: 0.00025
+  L: 0.395/2.0
+  M_fric: 4.77
+  PATH_TO_EXPERIMENT_RECORDINGS_DEFAULT: ./Experiment_Recordings/
+  actuator_noise: 0.1
+  cart_length: 0.044
+  controlBias: 0.0
+  controlDisturbance: 0.5
+  g: 9.81
+  k: 1.0/3.0
+  latency: 0.0
+  m_cart: 0.23
+  m_pole: 0.087
+  mode: stabilization
+  noise:
+    noise_mode: 'OFF'
+    sigma_angle: 0.0
+    sigma_angleD: 0.075
+    sigma_position: 0.0005
+    sigma_positionD: 0.005
+  num_control_inputs: 1
+  seed: 1873
+  u_max: 2.62
+  usable_track_length: 0.44
+  v_max: 0.8

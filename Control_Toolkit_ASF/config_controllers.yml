@@ -95,8 +95,10 @@ mpc-opti:
   controller_logging: True
 neural-imitator:
   seed: null                            # If null, random seed based on datetime is used
-  PATH_TO_MODELS: './Control_Toolkit_ASF/Controllers/models_for_neural_imitator_tf/'
-  net_name: 'GRU-6IN-32H1-32H2-1OUT-4'  # TF
+#  PATH_TO_MODELS: './Control_Toolkit_ASF/Controllers/models_for_neural_imitator_tf/'
+  PATH_TO_MODELS: './SI_Toolkit_ASF/CPS-17-02-2023-UpDown-Imitation/Models/'
+  net_name: 'GRU-6IN-32H1-32H2-1OUT-0'
+#  net_name: 'GRU-6IN-32H1-32H2-1OUT-4'  # TF
 #  net_name: 'GRU-6IN-32H1-32H2-1OUT-0'  # Pytorch
   input_at_input: False
   controller_logging: True
