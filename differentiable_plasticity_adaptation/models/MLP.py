@@ -27,6 +27,8 @@ class MLP:
 
 		self.losses = []
 
+		self.__reset_units()
+
 	def __init_ANN(self):
 
 		self.__init_parameters()
@@ -137,3 +139,19 @@ class MLP:
 
 		with open(f'../exported/Hebb-MLP_parameters-{phase}.pickle', 'wb') as file:
 			pickle.dump(_dict_export, file)
+
+	def load_parameters(self, parameters):
+
+		loaded = pickle.load(open(parameters, 'rb'))
+
+		for layer, weights in loaded['w'].items():
+			self.__w.append(torch.tensor(weights))
+
+	def infer(self,values):
+		self.__y[0][0] = torch.tensor(values)  # input layer's activation.
+
+		for l in range(self.__depth + 1):  # propagate input.
+
+			self.__y[l + 1][0] = F.tanh(self.__y[l].mm(self.__w[l]))
+
+		return self.__y[-1][0].tolist()[0]

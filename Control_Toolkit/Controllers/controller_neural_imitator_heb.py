@@ -1,5 +1,8 @@
+import argparse
 from types import SimpleNamespace
 from SI_Toolkit.computation_library import TensorType, NumpyLibrary
+from differentiable_plasticity_adaptation.models.Hebb_MLP import HebbMLP
+from differentiable_plasticity_adaptation.models.MLP import MLP
 
 import numpy as np
 
@@ -16,81 +19,32 @@ from SI_Toolkit.Functions.General.Initialization import (get_net,
 from SI_Toolkit.Functions.TF.Compile import CompileAdaptive
 
 
-class controller_neural_imitator(template_controller):
+class controller_neural_imitator_heb(template_controller):
     _computation_library = NumpyLibrary
 
     def configure(self):
-        NET_NAME = self.config_controller["net_name"]
-        PATH_TO_MODELS = self.config_controller["PATH_TO_MODELS"]
-
         self.input_at_input = self.config_controller["input_at_input"]
 
-        a = SimpleNamespace()
-        self.batch_size = 1  # It makes sense only for testing (Brunton plot for Q) of not rnn networks to make bigger batch, this is not implemented
-
-        a.path_to_models = PATH_TO_MODELS
-        a.net_name = NET_NAME
-
-        # Create a copy of the network suitable for inference (stateful and with sequence length one)
-        # self.net, self.net_info = \
-        #     get_net(a, time_series_length=1,
-        #             batch_size=self.batch_size, stateful=True)
-
-        # self.normalization_info = get_norm_info_for_net(self.net_info)
-        # self.normalize_inputs = get_normalization_function(self.normalization_info, self.net_info.inputs, self.lib)
-        # self.denormalize_outputs = get_denormalization_function(self.normalization_info, self.net_info.outputs,
-        #                                                         self.lib)
-        #
-        # self.net_input_normed = self.lib.to_variable(
-        #     np.zeros([len(self.net_info.inputs), ], dtype=np.float32), self.lib.float32)
-
-        # self.step_compilable = CompileAdaptive(self._step_compilable)
-
-        self.state_2_input_idx = []
-        self.remaining_inputs = self.net_info.inputs.copy()
-        for key in self.net_info.inputs:
-            if key in STATE_INDICES.keys():
-                self.state_2_input_idx.append(STATE_INDICES.get(key))
-                self.remaining_inputs.remove(key)
-            else:
-                break  # state inputs must be adjacent in the current implementation
-
-        # if self.net_info.library == 'Pytorch':
-        #     from SI_Toolkit.computation_library import PyTorchLibrary
-        #     self._computation_library = PyTorchLibrary
-        # elif self.net_info.library == 'TF':
-        #     from SI_Toolkit.computation_library import TensorFlowLibrary
-        #     self._computation_library = TensorFlowLibrary
-        #
-        # if self.lib.lib == 'Pytorch':
-        #     from SI_Toolkit.Functions.Pytorch.Network import get_device
-        #     self.device = get_device()
-        #     self.net.reset()
-        #     self.net.eval()
-
-        print('Configured neural imitator with {} network with {} library'.format(self.net_info.net_full_name, self.net_info.library))
+        args = SimpleNamespace(**{'input_size': 8,
+                                  'hidden_size': 50,
+                                  'output_size': 1,
+                                  'depth': 1,
+                                  'lr': 2e-3,
+                                  'epochs': 100,
+                                  'show_loss': 1})
+        self.model = MLP(args)
+        self.model.load_parameters(
+            'differentiable_plasticity_adaptation/exported/MLP_parameters-cartpole-trained-2.pickle')
 
     def step(self, s: np.ndarray, time=None, updated_attributes: "dict[str, TensorType]" = {}):
+        from CartPole.state_utilities import ANGLED_IDX, POSITION_IDX, POSITIOND_IDX, ANGLE_COS_IDX, \
+            ANGLE_SIN_IDX
 
-        if self.input_at_input:
-            net_input = s
-        else:
-            self.update_attributes(updated_attributes)
-            net_input = s[..., self.state_2_input_idx]
-            for key in self.remaining_inputs:
-                net_input = np.append(net_input, getattr(self.variable_parameters, key))
+        net_input = [s[ANGLED_IDX], s[ANGLE_COS_IDX], s[ANGLE_SIN_IDX], s[POSITION_IDX], s[POSITIOND_IDX],
+                     updated_attributes['target_position'], updated_attributes['target_equilibrium'],
+                     updated_attributes['L']]
 
-        # net_input = self.lib.to_tensor(net_input, self.lib.float32)
-        #
-        # if self.lib.lib == 'Pytorch':
-        #     net_input = net_input.to(self.device)
-        #
-        # net_output = self.step_compilable(net_input)
-        #
-        # if self.lib.lib == 'Pytorch':
-        #     net_output = net_output.detach().numpy()
-
-        Q = net_output
+        Q = self.model.infer(net_input)
 
         return Q
 

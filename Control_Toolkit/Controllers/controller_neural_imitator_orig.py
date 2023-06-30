@@ -16,7 +16,7 @@ from SI_Toolkit.Functions.General.Initialization import (get_net,
 from SI_Toolkit.Functions.TF.Compile import CompileAdaptive
 
 
-class controller_neural_imitator(template_controller):
+class controller_neural_imitator_orig(template_controller):
     _computation_library = NumpyLibrary
 
     def configure(self):
