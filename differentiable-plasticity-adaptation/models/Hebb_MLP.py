@@ -207,3 +207,11 @@ class HebbMLP:
 		with open(f'../exported/Hebb-MLP_parameters-{phase}.pickle', 'wb') as file:
 			pickle.dump(_dict_export, file)
 
+	def load_parameters(self, parameters):
+
+		for layer, weights in parameters['w'].items():
+			self.__w.append(torch.tensor(weights))
+
+		for layer, weights in parameters['alpha'].items():
+			self.__alpha.append(torch.tensor(weights))
+
