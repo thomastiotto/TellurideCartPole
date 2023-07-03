@@ -83,11 +83,14 @@ class MLP:
 
 				self.__y[0][0] = torch.tensor(datapoints['X'][i])	# input layer's activation.
 
-				for l in range(self.__depth+1):
+				for l in range(self.__depth):
 
 					# propagate input.
 
 					self.__y[l+1][0] = F.tanh(self.__y[l].mm(self.__w[l]))
+				
+				
+				self.__y[-1][0] = self.__y[1].mm(self.__w[1])
 
 				# computing loss (MSE).
 
@@ -115,9 +118,11 @@ class MLP:
 
 			self.__y[0][0] = torch.tensor(datapoints['X'][i])	# input layer's activation.
 
-			for l in range(self.__depth+1):						# propagate input.
+			for l in range(self.__depth):						# propagate input.
 
 				self.__y[l+1][0] = F.tanh(self.__y[l].mm(self.__w[l]))
+				
+			self.__y[-1][0] = self.__y[-2].mm(self.__w[-2])
 
 			# computing loss (MSE).
 
