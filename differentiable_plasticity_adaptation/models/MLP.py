@@ -5,158 +5,156 @@ from torch.autograd import Variable
 import numpy as np
 from tqdm.auto import tqdm
 
+
 class MLP:
-	def __init__(self, args):
+    def __init__(self, args):
 
-		self.__input_size = args.input_size
-		self.__hidden_size = args.hidden_size
-		self.__output_size = args.output_size
-		self.__depth = args.depth					# number of hidden layers.
+        self.__input_size = args.input_size
+        self.__hidden_size = args.hidden_size
+        self.__output_size = args.output_size
+        self.__depth = args.depth  # number of hidden layers.
 
-		self.__lr = args.lr							# learning rate.
-		self.__epochs = args.epochs					# number of epochs.
+        self.__lr = args.lr  # learning rate.
+        self.__epochs = args.epochs  # number of epochs.
 
-		self.s1 = .01								# scaling factor for fixed weight and alpha.
+        self.s1 = .01  # scaling factor for fixed weight and alpha.
 
-		self.show_loss = args.show_loss
+        self.show_loss = args.show_loss
 
-		self.__w = nn.ParameterList()				# fixed weights.
-		self.__y = []								# units' activations.
+        self.__w = nn.ParameterList()  # fixed weights.
+        self.__y = []  # units' activations.
 
-		self.__init_ANN()
+        self.__init_ANN()
 
-		self.losses = []
+        self.losses = []
 
-		self.__reset_units()
+        self.__reset_units()
 
-	def __init_ANN(self):
+    def __init_ANN(self):
 
-		self.__init_parameters()
+        self.__init_parameters()
 
-		self.optimizer = torch.optim.Adam(list(self.__w), lr = self.__lr)
+        self.optimizer = torch.optim.Adam(list(self.__w), lr=self.__lr)
 
-	def __init_parameters(self):
+    def __init_parameters(self):
 
-		# w/alpha/Hebb between input and 1st hidden layer.
+        # w/alpha/Hebb between input and 1st hidden layer.
 
-		self.__w.append(nn.Parameter(
-			self.s1 * torch.randn(
-				(self.__input_size, self.__hidden_size), requires_grad = True)))
+        self.__w.append(nn.Parameter(
+            self.s1 * torch.randn(
+                (self.__input_size, self.__hidden_size), requires_grad=True)))
 
-		# w/alpha/Hebb between hidden layers.
+        # w/alpha/Hebb between hidden layers.
 
-		for l in range(self.__depth-1):
+        for l in range(self.__depth - 1):
+            self.__w.append(nn.Parameter(
+                self.s1 * torch.randn(
+                    (self.__hidden_size, self.__hidden_size), requires_grad=True)))
 
-			self.__w.append(nn.Parameter(
-				self.s1 * torch.randn(
-					(self.__hidden_size, self.__hidden_size), requires_grad = True)))
+        # w/alpha/Hebb between last hidden layer and output.
 
-		# w/alpha/Hebb between last hidden layer and output.
+        self.__w.append(nn.Parameter(
+            self.s1 * torch.randn(
+                (self.__hidden_size, self.__output_size), requires_grad=True)))
 
-		self.__w.append(nn.Parameter(
-			self.s1 * torch.randn(
-					(self.__hidden_size, self.__output_size), requires_grad = True)))
+    def __reset_units(self):
 
-	def __reset_units(self):
+        self.__y = []
 
-		self.__y = []
+        self.__y.append(torch.zeros((1, self.__input_size), requires_grad=False))
 
-		self.__y.append(torch.zeros((1, self.__input_size), requires_grad = False))
+        for l in range(self.__depth):
+            self.__y.append(torch.zeros((1, self.__hidden_size), requires_grad=False))
 
-		for l in range(self.__depth):
+        self.__y.append(torch.zeros((1, self.__output_size), requires_grad=False))
 
-			self.__y.append(torch.zeros((1, self.__hidden_size), requires_grad = False))
+    def train(self, datapoints):
 
-		self.__y.append(torch.zeros((1, self.__output_size), requires_grad = False))
+        print(f'\n> training MLP for {self.__epochs} epochs...')
 
-	def train(self, datapoints):
+        for e in tqdm(range(self.__epochs), desc=f'Training', leave=True):
 
-		print(f'\n> training MLP for {self.__epochs} epochs...')
+            loss = 0.0
 
-		for e in range(self.__epochs):
+            for i in tqdm(range(len(datapoints['X'])), desc=f'Training epoch: {e}', leave=False):
 
-			loss = 0.0
+                self.__reset_units()  # reset units' activations.
 
-			for i in tqdm(range(len(datapoints['X'])),desc=f'Training epoch: {e}'):
+                self.optimizer.zero_grad()
 
-				self.__reset_units()						# reset units' actiavtions.
+                self.__y[0][0] = torch.tensor(datapoints['X'][i])  # input layer's activation.
 
-				self.optimizer.zero_grad()
+                for l in range(self.__depth):
+                    # propagate input.
 
-				self.__y[0][0] = torch.tensor(datapoints['X'][i])	# input layer's activation.
+                    self.__y[l + 1][0] = F.tanh(self.__y[l].mm(self.__w[l]))
 
-				for l in range(self.__depth):
+                self.__y[-1][0] = self.__y[1].mm(self.__w[1])
 
-					# propagate input.
+                # computing loss (MSE).
 
-					self.__y[l+1][0] = F.tanh(self.__y[l].mm(self.__w[l]))
-				
-				
-				self.__y[-1][0] = self.__y[1].mm(self.__w[1])
+                loss += ((self.__y[-1][0] - torch.tensor(datapoints['Y'][i], requires_grad=False)) ** 2)
 
-				# computing loss (MSE).
+            loss /= len(datapoints['X'])
 
-				loss += ((self.__y[-1][0] - torch.tensor(datapoints['Y'][i], requires_grad = False)) ** 2)
+            if e % 10 == 0 and self.show_loss:
+                print(f'epoch: {e}, loss: {loss.item()}')
 
-			loss /= len(datapoints['X'])
+            self.losses.append(loss.item())
 
-			if e % 10 == 0 and self.show_loss:
-				print(f'epoch: {e}, loss: {loss.item()}')
+            loss.backward()  # backpropagate.
+            self.optimizer.step()
 
-			self.losses.append(loss.item())
+    def predict(self, datapoints):
 
-			loss.backward()								# backpropagate.
-			self.optimizer.step()
+        print(f'\n> testing MLP...')
 
-	def predict(self, datapoints):
+        loss = []
 
-		print(f'\n> testing MLP...')
+        for i in tqdm(range(len(datapoints['X'])), desc=f'Testing'):
 
-		loss = []
+            self.__reset_units()  # reset units' actiavtions.
 
-		for i in tqdm(range(len(datapoints['X'])),desc=f'Testing'):
+            self.__y[0][0] = torch.tensor(datapoints['X'][i])  # input layer's activation.
 
-			self.__reset_units()								# reset units' actiavtions.
+            for l in range(self.__depth):  # propagate input.
 
-			self.__y[0][0] = torch.tensor(datapoints['X'][i])	# input layer's activation.
+                self.__y[l + 1][0] = F.tanh(self.__y[l].mm(self.__w[l]))
 
-			for l in range(self.__depth):						# propagate input.
+            self.__y[-1][0] = self.__y[1].mm(self.__w[1])
 
-				self.__y[l+1][0] = F.tanh(self.__y[l].mm(self.__w[l]))
-				
-			self.__y[-1][0] = self.__y[-2].mm(self.__w[-2])
+            # computing loss (MSE).
 
-			# computing loss (MSE).
+            loss.append(((self.__y[-1][0] - torch.tensor(datapoints['Y'][i], requires_grad=False)) ** 2).tolist()[0])
 
-			loss.append(((self.__y[-1][0] - torch.tensor(datapoints['Y'][i], requires_grad = False)) ** 2).tolist()[0])
+        return loss
 
-		return loss
+    def export_parameters(self, phase):
 
-	def export_parameters(self, phase):
+        __w = list(self.__w)
 
-		__w = list(self.__w)
+        _dict_export = {'w': {}}
 
-		_dict_export = {'w': {}}
+        for l in range(len(__w)):
+            _dict_export['w'][l] = __w[l].tolist()
 
-		for l in range(len(__w)):
+        with open(f'../exported/Hebb-MLP_parameters-{phase}.pickle', 'wb') as file:
+            pickle.dump(_dict_export, file)
 
-			_dict_export['w'][l] = __w[l].tolist()
+    def load_parameters(self, parameters):
 
-		with open(f'../exported/Hebb-MLP_parameters-{phase}.pickle', 'wb') as file:
-			pickle.dump(_dict_export, file)
+        loaded = pickle.load(open(parameters, 'rb'))
 
-	def load_parameters(self, parameters):
+        for layer, weights in loaded['w'].items():
+            self.__w.append(torch.tensor(weights))
 
-		loaded = pickle.load(open(parameters, 'rb'))
+    def infer(self, values):
+        self.__y[0][0] = torch.tensor(values)  # input layer's activation.
 
-		for layer, weights in loaded['w'].items():
-			self.__w.append(torch.tensor(weights))
+        for l in range(self.__depth):  # propagate input.
 
-	def infer(self,values):
-		self.__y[0][0] = torch.tensor(values)  # input layer's activation.
+            self.__y[l + 1][0] = F.tanh(self.__y[l].mm(self.__w[l]))
 
-		for l in range(self.__depth + 1):  # propagate input.
+        self.__y[-1][0] = self.__y[1].mm(self.__w[1])
 
-			self.__y[l + 1][0] = F.tanh(self.__y[l].mm(self.__w[l]))
-
-		return self.__y[-1][0].tolist()[0]
+        return self.__y[-1][0].tolist()[0]

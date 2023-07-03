@@ -34,17 +34,23 @@ class controller_neural_imitator_heb(template_controller):
                                   'show_loss': 1})
         self.model = MLP(args)
         self.model.load_parameters(
-            'differentiable_plasticity_adaptation/exported/MLP_parameters-cartpole-trained-2.pickle')
+            '/Users/thomas/Desktop/MLP_parameters-cartpole-trained-3.pickle')
 
     def step(self, s: np.ndarray, time=None, updated_attributes: "dict[str, TensorType]" = {}):
+        import time as timer
         from CartPole.state_utilities import ANGLED_IDX, POSITION_IDX, POSITIOND_IDX, ANGLE_COS_IDX, \
             ANGLE_SIN_IDX
 
         net_input = [s[ANGLED_IDX], s[ANGLE_COS_IDX], s[ANGLE_SIN_IDX], s[POSITION_IDX], s[POSITIOND_IDX],
                      updated_attributes['target_position'], updated_attributes['target_equilibrium'],
                      updated_attributes['L']]
-
+        print('State', net_input)
+        # TODO outputs are tiny
+        start_t = timer.time()
         Q = self.model.infer(net_input)
+        print('Time for NN step: ', timer.time() - start_t)
+
+        print('Q', Q)
 
         return Q
 
