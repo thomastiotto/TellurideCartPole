@@ -89,13 +89,13 @@ class MLP:
 
                     # computing loss (MSE).
                     loss = ((self.__y[-1][0] - torch.tensor(tgt, requires_grad=False)) ** 2)
-                    self.optimizer.step()
                     loss.backward()
+                    self.optimizer.step()
 
                     obs_loss.append(loss.item())
 
                 exp_loss.append(np.mean(obs_loss))
-                print('exp_loss', exp_loss[-1])
+                # print('exp_loss', exp_loss[-1])
 
             epoch_loss.append(np.mean(exp_loss))
 
@@ -108,21 +108,21 @@ class MLP:
 
         loss = []
 
-        for i in tqdm(range(len(datapoints['X'])), desc=f'Testing'):
+        for exp in tqdm(datapoints):
+            for inp, tgt in zip(exp['X'], exp['Y']):
+                # self.__reset_units()  # reset units' activations.
 
-            self.__reset_units()  # reset units' actiavtions.
+                self.__y[0][0] = torch.tensor(inp)  # input layer's activation.
 
-            self.__y[0][0] = torch.tensor(datapoints['X'][i])  # input layer's activation.
+                for l in range(self.__depth):  # propagate input.
 
-            for l in range(self.__depth):  # propagate input.
+                    self.__y[l + 1][0] = F.tanh(self.__y[l].mm(self.__w[l]))
 
-                self.__y[l + 1][0] = F.tanh(self.__y[l].mm(self.__w[l]))
+                self.__y[-1][0] = self.__y[1].mm(self.__w[1])
 
-            self.__y[-1][0] = self.__y[1].mm(self.__w[1])
+                # computing loss (MSE).
 
-            # computing loss (MSE).
-
-            loss.append(((self.__y[-1][0] - torch.tensor(datapoints['Y'][i], requires_grad=False)) ** 2).tolist()[0])
+                loss.append(((self.__y[-1][0] - torch.tensor(tgt, requires_grad=False)) ** 2).tolist()[0])
 
         return loss
 

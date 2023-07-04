@@ -92,8 +92,8 @@ test_data_norm = normalize_data(test_data, min, max)
 
 print('> exporting data...')
 
-with open(f'../exported/Train-{dataset}-noise.pickle', 'wb') as file:
+with open(f'../datasets/Train-{dataset}-noise.pickle', 'wb') as file:
     pickle.dump(train_data_norm, file)
 
-with open(f'../exported/Test-{dataset}-noise.pickle', 'wb') as file:
+with open(f'../datasets/Test-{dataset}-noise.pickle', 'wb') as file:
     pickle.dump(test_data_norm, file)
