@@ -69,41 +69,38 @@ class MLP:
         self.__y.append(torch.zeros((1, self.__output_size), requires_grad=False))
 
     def train(self, datapoints):
-
         print(f'\n> training MLP for {self.__epochs} epochs...')
 
-        for e in tqdm(range(self.__epochs), desc=f'Training', leave=True):
+        epoch_loss = []
+        for e in tqdm(range(self.__epochs), leave=True):
+            exp_loss = []
+            for exp in tqdm(datapoints, leave=False):
+                obs_loss = []
+                for inp, tgt in zip(exp['X'], exp['Y']):
+                    loss = 0.0
+                    self.__reset_units()  # reset units' activations.
+                    self.optimizer.zero_grad()
 
-            loss = 0.0
+                    self.__y[0][0] = torch.tensor(inp)  # input layer's activation.
+                    for l in range(self.__depth):
+                        # propagate input.
+                        self.__y[l + 1][0] = F.tanh(self.__y[l].mm(self.__w[l]))
+                    self.__y[-1][0] = self.__y[1].mm(self.__w[1])
 
-            for i in tqdm(range(len(datapoints['X'])), desc=f'Training epoch: {e}', leave=False):
+                    # computing loss (MSE).
+                    loss = ((self.__y[-1][0] - torch.tensor(tgt, requires_grad=False)) ** 2)
+                    self.optimizer.step()
+                    loss.backward()
 
-                self.__reset_units()  # reset units' activations.
+                    obs_loss.append(loss.item())
 
-                self.optimizer.zero_grad()
+                exp_loss.append(np.mean(obs_loss))
+                print('exp_loss', exp_loss[-1])
 
-                self.__y[0][0] = torch.tensor(datapoints['X'][i])  # input layer's activation.
+            epoch_loss.append(np.mean(exp_loss))
 
-                for l in range(self.__depth):
-                    # propagate input.
-
-                    self.__y[l + 1][0] = F.tanh(self.__y[l].mm(self.__w[l]))
-
-                self.__y[-1][0] = self.__y[1].mm(self.__w[1])
-
-                # computing loss (MSE).
-
-                loss += ((self.__y[-1][0] - torch.tensor(datapoints['Y'][i], requires_grad=False)) ** 2)
-
-            loss /= len(datapoints['X'])
-
-            if e % 10 == 0 and self.show_loss:
-                print(f'epoch: {e}, loss: {loss.item()}')
-
-            self.losses.append(loss.item())
-
-            loss.backward()  # backpropagate.
-            self.optimizer.step()
+            if self.show_loss:
+                print(f'epoch: {e}, loss: {epoch_loss[-1]}')
 
     def predict(self, datapoints):
 

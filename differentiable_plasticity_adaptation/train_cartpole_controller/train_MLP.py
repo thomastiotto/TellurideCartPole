@@ -7,16 +7,14 @@ sys.path.append('../models')
 
 from differentiable_plasticity_adaptation.models.MLP import MLP
 
-dataset = '1s500ms-noise-noL-norm'
-
-device = torch.device("cuda:0")
+dataset = 'CPS-17-02-2023-UpDown-Imitation-noise'
 
 
 def main(args):
-    with open(f'../datasets/Train-{dataset}.pickle', 'rb') as file:  # loading training samples.
+    with open(f'../exported/Train-{dataset}.pickle', 'rb') as file:  # loading training samples.
         training_samples = pickle.load(file)
 
-    with open(f'../datasets/Test-{dataset}.pickle', 'rb') as file:  # loading training samples.
+    with open(f'../exported/Test-{dataset}.pickle', 'rb') as file:  # loading training samples.
         test_samples = pickle.load(file)
 
     mlp = MLP(args)  # instantiate ANN.
@@ -51,7 +49,7 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='MLP Differential Plasticity')
 
-    parser.add_argument('--input_size', type=int, default=7, help='Input size')
+    parser.add_argument('--input_size', type=int, default=8, help='Input size')
     parser.add_argument('--hidden_size', type=int, default=50, help='Hidden size')
     parser.add_argument('--output_size', type=int, default=1, help='Output size')
     parser.add_argument('--depth', type=int, default=1, help='Number of hidden layers')
