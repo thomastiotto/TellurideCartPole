@@ -85,10 +85,10 @@ class MLP:
                     for l in range(self.__depth):
                         # propagate input.
                         self.__y[l + 1][0] = F.tanh(self.__y[l].mm(self.__w[l]))
-                    self.__y[-1][0] = self.__y[1].mm(self.__w[1])
+                    self.__y[-1][0] = self.__y[self.__depth].mm(self.__w[self.__depth])
 
                     # computing loss (MSE).
-                    loss = ((self.__y[-1][0] - torch.tensor(tgt, requires_grad=False)) ** 2)
+                    loss = (self.__y[-1][0] - torch.tensor(tgt, requires_grad=False)) ** 2
                     loss.backward()
                     self.optimizer.step()
 
@@ -126,7 +126,7 @@ class MLP:
 
         return loss
 
-    def export_parameters(self, phase):
+    def export_parameters(self, dataset, phase):
 
         __w = list(self.__w)
 
@@ -135,7 +135,7 @@ class MLP:
         for l in range(len(__w)):
             _dict_export['w'][l] = __w[l].tolist()
 
-        with open(f'../exported/Hebb-MLP_parameters-{phase}.pickle', 'wb') as file:
+        with open(f'../exported/MLP_parameters-{dataset}-{phase}.pickle', 'wb') as file:
             pickle.dump(_dict_export, file)
 
     def load_parameters(self, parameters):

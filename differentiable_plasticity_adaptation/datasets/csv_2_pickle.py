@@ -2,7 +2,7 @@ import csv, os, pickle
 
 columns = ['time', 'angle', 'angleD', 'angleDD', 'angle_cos', 'angle_sin', 'position', 'positionD', 'positionDD', 'Q',
            'u', 'target_position', 'target_equilibrium', 'L', 'u_-1']
-net_input = ['angleD', 'angle_cos', 'angle_sin', 'position', 'positionD', 'target_position', 'target_equilibrium', 'L']
+net_input = ['angleD', 'angle_cos', 'angle_sin', 'position', 'positionD', 'target_position', 'target_equilibrium']
 
 net_input_index = []
 
