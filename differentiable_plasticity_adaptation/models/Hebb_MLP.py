@@ -209,9 +209,35 @@ class HebbMLP:
 
 	def load_parameters(self, parameters):
 
-		for layer, weights in parameters['w'].items():
+		loaded = pickle.load(open(parameters, 'rb'))
+
+		for layer, weights in loaded['w'].items():
 			self.__w.append(torch.tensor(weights))
 
-		for layer, weights in parameters['alpha'].items():
+		for layer, weights in loaded['alpha'].items():
 			self.__alpha.append(torch.tensor(weights))
+
+	def infer(self, datapoints):
+
+		self.__reset_units()								# reset units' actiavtions.
+
+		self.__y[0][0] = torch.tensor(datapoints['X'][i])	# input layer's activation.
+
+		for l in range(self.__depth+1):						# propagate input.
+
+			self.__y[l+1][0] = F.tanh(
+				self.__y[l].mm(self.__w[l] + torch.mul(self.__alpha[l], self.__Hebb[l]))
+				)
+
+			# update hebbian terms.
+
+			pre_y = self.__y[l].view(self.__y[l].shape[1], self.__y[l].shape[0])
+			post_y = self.__y[l+1].expand(self.__y[l].shape[1], self.__y[l+1].shape[1])
+
+			self.__Hebb[l] = (1.0 - self.s1) * self.__Hebb[l] + self.s1 * (pre_y * post_y)
+
+		# computing loss (MSE).
+
+
+		return self.__y[-1][0].tolist()[0]
 

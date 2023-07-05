@@ -16,7 +16,7 @@ from SI_Toolkit.Functions.General.Initialization import (get_net,
 from SI_Toolkit.Functions.TF.Compile import CompileAdaptive
 
 
-class controller_neural_imitator(template_controller):
+class controller_neural_imitator_orig(template_controller):
     _computation_library = NumpyLibrary
 
     def configure(self):
@@ -68,9 +68,11 @@ class controller_neural_imitator(template_controller):
             self.net.reset()
             self.net.eval()
 
-        print('Configured neural imitator with {} network with {} library'.format(self.net_info.net_full_name, self.net_info.library))
+        print('Configured neural imitator with {} network with {} library'.format(self.net_info.net_full_name,
+                                                                                  self.net_info.library))
 
     def step(self, s: np.ndarray, time=None, updated_attributes: "dict[str, TensorType]" = {}):
+        import time as timer
 
         if self.input_at_input:
             net_input = s
@@ -85,12 +87,15 @@ class controller_neural_imitator(template_controller):
         if self.lib.lib == 'Pytorch':
             net_input = net_input.to(self.device)
 
+        start_t = timer.time()
         net_output = self.step_compilable(net_input)
+        print('Time for NN step: ', timer.time() - start_t)
 
         if self.lib.lib == 'Pytorch':
             net_output = net_output.detach().numpy()
 
         Q = net_output
+        print(Q)
 
         return Q
 

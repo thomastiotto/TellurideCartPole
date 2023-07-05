@@ -14,7 +14,7 @@ NET FULL NAME:
 GRU-6IN-32H1-32H2-1OUT-0
 
 INPUTS:
-angleD, angle_cos, angle_sin, position, positionD, target_position
+a 
 
 OUTPUTS:
 Q
