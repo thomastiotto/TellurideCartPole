@@ -16,7 +16,7 @@ parser = argparse.ArgumentParser(description='MLP Differential Plasticity')
 
 parser.add_argument('--hidden_size', type=int, default=32, help='Hidden size')
 parser.add_argument('--depth', type=int, default=2, help='Number of hidden layers')
-parser.add_argument('--epochs', type=int, default=20, help='Number of epochs')
+parser.add_argument('--epochs', type=int, default=3, help='Number of epochs')
 parser.add_argument('--show_loss', type=int, default=1, help='Shows loss over training')
 
 args = parser.parse_args()
@@ -29,24 +29,29 @@ with open(f'../datasets/Test-{dataset}.pickle', 'rb') as file:  # loading traini
 
 input_size = len(training_samples[0]['X'][0])
 
-model = model_def.define_rec_model_struct(args.hidden_size, input_size, args.depth)
+# model = model_def.define_rec_model_struct(args.hidden_size, input_size, args.depth)
+model = model_def.model(ninp=input_size, num_layers=2, nhid=32)
 
 summary(model, input_size=(32, input_size))
 
 loss_fn = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters())
 
+torch.autograd.set_detect_anomaly(True)
+
 e_loss = []
+hidden_states = [None]
 for e in range(args.epochs):
     for exp in tqdm(training_samples, leave=False, position=0):
         exp_loss = []
         for i in range(0, len(exp['X']), 32):
             Xbatch = torch.tensor(exp['X'][i:i + 32], dtype=torch.float32)
             Ybatch = torch.tensor(exp['Y'][i:i + 32], dtype=torch.float32)
-            Ypred = model(Xbatch)
+            Ypred, hidden = model(Xbatch, hidden_states[-1])
+            hidden_states.append(hidden)
             loss = loss_fn(Ypred, Ybatch)
             optimizer.zero_grad()
-            loss.backward()
+            loss.backward(retain_graph=True)
             optimizer.step()
             exp_loss.append(loss.item())
     e_loss.append(np.mean(exp_loss))
@@ -60,6 +65,9 @@ if args.show_loss:
 torch.save(model.state_dict(), f'../exported/MLP_parameters-{dataset}-after')
 print(f'Model saved to ../exported/MLP_parameters-{dataset}-after')
 
+y_pred = []
 with torch.no_grad():
-    y_pred = model(torch.Tensor(test_samples[0]['X']))
+    for obs in test_samples[0]['X']:
+        y_pred = model(torch.Tensor(obs).unsqueeze(0))
+
 print('Validation loss', loss_fn(y_pred, torch.Tensor(test_samples[0]['Y'])))
