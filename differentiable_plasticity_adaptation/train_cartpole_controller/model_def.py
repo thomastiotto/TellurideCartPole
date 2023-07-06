@@ -48,16 +48,25 @@ class model(nn.Module):
         self.FC = nn.Linear(nhid, 1)
         self.tanh = nn.Tanh()
 
-    def forward(self, X, hidden=None):
-        if hidden is None:
-            out, hidden_new = self.gru_nets(X)
-        else:
-            out, hidden_new = self.gru_nets(X, hidden)
+        self.hidden = None
 
-        # out = out[:, -1]
+    def forward(self, X):
+        out, _ = self.gru_nets(X)
 
         out = self.tanh(out)
 
         out = self.FC(out)
 
-        return out, hidden_new
+        return out
+
+    def stateful_forward(self, X):
+        if self.hidden is None:
+            out, hidden = self.gru_nets(X)
+        else:
+            out, self.hidden = self.gru_nets(X, self.hidden)
+
+        out = self.tanh(out)
+
+        out = self.FC(out)
+
+        return out
